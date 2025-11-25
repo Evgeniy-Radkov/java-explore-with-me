@@ -1,5 +1,7 @@
 package ru.practicum.stats.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.stats.dto.EndpointHitDto;
@@ -15,14 +17,14 @@ public class StatsController {
     private final StatsService statsService;
 
     @PostMapping("/hit")
-    public void saveHit(@RequestBody EndpointHitDto hitDto) {
+    public void saveHit(@Valid @RequestBody EndpointHitDto hitDto) {
         statsService.saveHit(hitDto);
     }
 
     @GetMapping("/stats")
     public List<ViewStatsDto> getStats(
-            @RequestParam String start,
-            @RequestParam String end,
+            @RequestParam @NotBlank String start,
+            @RequestParam @NotBlank String end,
             @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") boolean unique
     ) {
