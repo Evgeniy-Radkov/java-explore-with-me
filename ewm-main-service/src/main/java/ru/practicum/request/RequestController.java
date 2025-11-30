@@ -2,6 +2,7 @@ package ru.practicum.request;
 
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.request.dto.ParticipationRequestDto;
@@ -22,6 +23,7 @@ public class RequestController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(
             @PathVariable Long userId,
             @RequestParam @Positive Long eventId

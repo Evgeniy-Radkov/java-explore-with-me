@@ -84,7 +84,7 @@ public class PublicEventServiceImpl implements PublicEventService {
 
         LocalDateTime statsEnd = LocalDateTime.now();
 
-        List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, uris, false);
+        List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, uris, true);
 
         Map<String, Long> viewsByUri = stats == null
                 ? Collections.emptyMap()
@@ -123,7 +123,8 @@ public class PublicEventServiceImpl implements PublicEventService {
 
 
         if ("VIEWS".equalsIgnoreCase(sort)) {
-            result.sort(Comparator.comparing(EventShortDto::getViews, Comparator.nullsFirst(Long::compareTo)).reversed());
+            result.sort(Comparator.comparing(EventShortDto::getViews,
+                    Comparator.nullsFirst(Long::compareTo)).reversed());
         }
 
         return result;
@@ -148,7 +149,13 @@ public class PublicEventServiceImpl implements PublicEventService {
         String uri = "/events/" + eventId;
         LocalDateTime statsEnd = LocalDateTime.now();
 
-        List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, List.of(uri), false);
+        List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, List.of(uri), true);
+
+        // Добавляем диагностику
+        System.out.println("====== DEBUG STATS ======");
+        System.out.println("Requested URI: " + uri);
+        System.out.println("Stats returned: " + stats);
+        System.out.println("==========================");
 
         long views = 0L;
         if (stats != null && !stats.isEmpty()) {
