@@ -20,7 +20,7 @@ public class StatsClientImpl implements StatsClient {
     private final RestTemplate restTemplate;
 
     @Value("${stats-server.url}")
-    private final String baseUrl;
+    private String baseUrl;
 
     @Override
     public void hit(EndpointHitDto hitDto) {
