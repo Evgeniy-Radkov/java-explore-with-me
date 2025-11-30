@@ -54,6 +54,10 @@ public class PublicEventServiceImpl implements PublicEventService {
             rangeStart = LocalDateTime.now();
         }
 
+        if (rangeEnd == null) {
+            rangeEnd = rangeStart.plusYears(1000);
+        }
+
         Sort springSort = Sort.by("eventDate").ascending();
 
         PageRequest page = PageRequest.of(from / size, size, springSort);

@@ -35,8 +35,8 @@ public class StatsClientImpl implements StatsClient {
                                        boolean unique) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        String startStr = URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8);
-        String endStr = URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8);
+        String startStr = start.format(formatter);
+        String endStr = end.format(formatter);
 
         StringBuilder urlBuilder = new StringBuilder(baseUrl)
                 .append("/stats")
