@@ -5,8 +5,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.stats.client.StatsClient;
-import ru.practicum.stats.dto.ViewStatsDto;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
@@ -17,6 +15,8 @@ import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 import ru.practicum.request.ParticipationRequestRepository;
 import ru.practicum.request.enums.RequestStatus;
+import ru.practicum.stats.client.StatsClient;
+import ru.practicum.stats.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -53,19 +53,16 @@ public class PublicEventServiceImpl implements PublicEventService {
         if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
         }
-
         if (rangeEnd == null) {
             rangeEnd = rangeStart.plusYears(1000);
         }
 
         Sort springSort = Sort.by("eventDate").ascending();
-
         PageRequest page = PageRequest.of(from / size, size, springSort);
 
         List<Long> categoriesParam = (categories == null || categories.isEmpty()) ? null : categories;
 
         List<Event> events = eventRepository.searchPublicEvents(
-                (text == null || text.isBlank()) ? null : text,
                 categoriesParam,
                 paid,
                 rangeStart,
@@ -77,6 +74,21 @@ public class PublicEventServiceImpl implements PublicEventService {
             return List.of();
         }
 
+        if (text != null && !text.isBlank()) {
+            String lowerText = text.toLowerCase();
+            events = events.stream()
+                    .filter(e ->
+                            (e.getAnnotation() != null &&
+                                    e.getAnnotation().toLowerCase().contains(lowerText)) ||
+                                    (e.getDescription() != null &&
+                                            e.getDescription().toLowerCase().contains(lowerText))
+                    )
+                    .toList();
+
+            if (events.isEmpty()) {
+                return List.of();
+            }
+        }
 
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
@@ -86,7 +98,7 @@ public class PublicEventServiceImpl implements PublicEventService {
 
         List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, uris, true);
 
-        Map<String, Long> viewsByUri = stats == null
+        Map<String, Long> viewsByUri = (stats == null)
                 ? Collections.emptyMap()
                 : stats.stream()
                 .collect(Collectors.toMap(
@@ -94,13 +106,12 @@ public class PublicEventServiceImpl implements PublicEventService {
                         ViewStatsDto::getHits
                 ));
 
-
         List<EventShortDto> result = events.stream()
                 .map(event -> {
                     long confirmed = requestRepository
                             .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
 
-                    if (onlyAvailable != null && onlyAvailable) {
+                    if (Boolean.TRUE.equals(onlyAvailable)) {
                         Integer limit = event.getParticipantLimit();
                         int limitValue = (limit == null ? 0 : limit);
 
@@ -121,15 +132,15 @@ public class PublicEventServiceImpl implements PublicEventService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-
         if ("VIEWS".equalsIgnoreCase(sort)) {
-            result.sort(Comparator.comparing(EventShortDto::getViews,
-                    Comparator.nullsFirst(Long::compareTo)).reversed());
+            result.sort(Comparator.comparing(
+                    EventShortDto::getViews,
+                    Comparator.nullsFirst(Long::compareTo)
+            ).reversed());
         }
 
         return result;
     }
-
 
     @Override
     public EventFullDto getEvent(Long eventId) {
@@ -151,17 +162,10 @@ public class PublicEventServiceImpl implements PublicEventService {
 
         List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, List.of(uri), true);
 
-        // Добавляем диагностику
-        System.out.println("====== DEBUG STATS ======");
-        System.out.println("Requested URI: " + uri);
-        System.out.println("Stats returned: " + stats);
-        System.out.println("==========================");
-
         long views = 0L;
         if (stats != null && !stats.isEmpty()) {
             views = stats.get(0).getHits();
         }
-
         dto.setViews(views);
 
         return dto;

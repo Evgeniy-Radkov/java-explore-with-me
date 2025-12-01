@@ -58,11 +58,11 @@ public class RequestServiceImpl implements RequestService {
                 ));
 
         if (event.getInitiator().getId().equals(userId)) {
-            throw new ValidationException("Нельзя отправить запрос на участие в своём событии");
+            throw new ConflictException("Нельзя отправить запрос на участие в своём событии");
         }
 
         if (!event.getState().equals(EventState.PUBLISHED)) {
-            throw new ValidationException("Нельзя участвовать в неопубликованном событии");
+            throw new ConflictException("Нельзя участвовать в неопубликованном событии");
         }
 
         if (requestRepository.existsByEventIdAndRequesterId(eventId, userId)) {
@@ -73,7 +73,7 @@ public class RequestServiceImpl implements RequestService {
         if (event.getParticipantLimit() != null
                 && event.getParticipantLimit() > 0
                 && confirmedRequests >= event.getParticipantLimit()) {
-            throw new ValidationException("Лимит заявок на участие исчерпан");
+            throw new ConflictException("Лимит заявок на участие исчерпан");
         }
 
         ParticipationRequest request = new ParticipationRequest();

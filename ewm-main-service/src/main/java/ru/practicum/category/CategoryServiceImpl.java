@@ -2,10 +2,12 @@ package ru.practicum.category;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.dto.NewCategoryDto;
+import ru.practicum.event.EventRepository;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 
@@ -18,6 +20,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final EventRepository eventRepository;
 
     @Override
     @Transactional
@@ -54,13 +57,18 @@ public class CategoryServiceImpl implements CategoryService {
         if (!categoryRepository.existsById(catId)) {
             throw new NotFoundException("Категория не найдена: " + catId);
         }
+
+        if (eventRepository.existsByCategory_Id(catId)) {
+            throw new ConflictException("Категория связана с событиями и не может быть удалена.");
+        }
+
         categoryRepository.deleteById(catId);
     }
 
     @Override
     public List<CategoryDto> getAll(int from, int size) {
         int page = from / size;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id"));
         return categoryRepository.findAll(pageRequest).stream()
                 .map(categoryMapper::toCategoryDto)
                 .toList();

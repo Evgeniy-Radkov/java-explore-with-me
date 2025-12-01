@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.stats.client.StatsClient;
-import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.service.PublicEventService;
+import ru.practicum.stats.client.StatsClient;
+import ru.practicum.stats.dto.EndpointHitDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

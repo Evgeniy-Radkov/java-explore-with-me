@@ -14,8 +14,8 @@ import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.enums.EventState;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.exception.ValidationException;
 import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
@@ -36,7 +36,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
         PageRequest page = PageRequest.of(from / size, size);
-
         return eventMapper.toEventShortDtoList(
                 eventRepository.findAllByInitiatorId(userId, page)
         );
@@ -56,7 +55,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
                 ));
 
         Event event = eventMapper.toEvent(dto);
-
         event.setInitiator(initiator);
         event.setCategory(category);
         event.setCreatedOn(LocalDateTime.now());
@@ -100,7 +98,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         }
 
         if (event.getState().equals(EventState.PUBLISHED)) {
-            throw new ValidationException(
+            throw new ConflictException(
                     "Опубликованное событие нельзя изменить"
             );
         }
