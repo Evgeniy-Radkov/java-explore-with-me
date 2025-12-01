@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -16,7 +17,9 @@ public class ErrorHandler {
     @ExceptionHandler({
             MethodArgumentNotValidException.class,
             ConstraintViolationException.class,
-            DateTimeParseException.class
+            DateTimeParseException.class,
+            IllegalArgumentException.class,
+            MissingServletRequestParameterException.class
     })
     public ResponseEntity<ApiError> handleBadRequest(Exception ex) {
         ApiError error = new ApiError(
