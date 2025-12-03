@@ -21,7 +21,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
           AND (:states IS NULL OR e.state IN :states)
           AND (:categories IS NULL OR e.category.id IN :categories)
           AND e.eventDate >= :rangeStart
-          AND e.eventDate <= :rangeEnd
+          AND e.eventDate <= COALESCE(:rangeEnd, e.eventDate)
         """)
     List<Event> searchAdminEvents(
             @Param("users") List<Long> users,
@@ -39,7 +39,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
               AND (:categories IS NULL OR e.category.id IN :categories)
               AND (:paid IS NULL OR e.paid = :paid)
               AND e.eventDate >= :rangeStart
-              AND e.eventDate <= :rangeEnd
+              AND e.eventDate <= COALESCE(:rangeEnd, e.eventDate)
             """)
     List<Event> searchPublicEvents(
             @Param("categories") List<Long> categories,

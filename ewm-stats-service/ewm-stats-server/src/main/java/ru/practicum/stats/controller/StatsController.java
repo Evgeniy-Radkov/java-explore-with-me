@@ -35,9 +35,8 @@ public class StatsController {
             @RequestParam(required = false) List<String> uris,
             @RequestParam(required = false, defaultValue = "false") Boolean unique
     ) {
-
-        LocalDateTime startDate = parseDateTimeFlexibly(start);
-        LocalDateTime endDate = parseDateTimeFlexibly(end);
+        LocalDateTime startDate = parseDateTime(start);
+        LocalDateTime endDate = parseDateTime(end);
 
         if (startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("Дата начала не может быть позже даты окончания");
@@ -46,18 +45,19 @@ public class StatsController {
         return statsService.getStats(startDate, endDate, uris, unique != null && unique);
     }
 
-    private LocalDateTime parseDateTimeFlexibly(String dateTimeStr) {
+    // Параметры приходят URL-кодированными, поэтому сначала декодирую, затем парсинг в LocalDateTime.
+
+    private LocalDateTime parseDateTime(String raw) {
         try {
-            String decoded = URLDecoder.decode(dateTimeStr, StandardCharsets.UTF_8);
+            String decoded = URLDecoder.decode(raw, StandardCharsets.UTF_8);
             String cleaned = decoded.trim();
 
-            if (cleaned.contains("T")) {
-                return LocalDateTime.parse(cleaned, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            } else {
-                return LocalDateTime.parse(cleaned, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            }
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            return LocalDateTime.parse(cleaned, formatter);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Некорректный формат даты: " + dateTimeStr, e);
+            throw new IllegalArgumentException("Некорректный формат даты: " + raw, e);
         }
     }
 }

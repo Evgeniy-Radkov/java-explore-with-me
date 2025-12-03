@@ -15,6 +15,7 @@ import ru.practicum.event.enums.EventState;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.request.ParticipationRequest;
 import ru.practicum.request.ParticipationRequestRepository;
 import ru.practicum.request.enums.RequestStatus;
 import ru.practicum.stats.client.StatsClient;
@@ -58,9 +59,6 @@ public class AdminEventServiceImpl implements AdminEventService {
         if (rangeStart == null) {
             rangeStart = LocalDateTime.of(2000, 1, 1, 0, 0);
         }
-        if (rangeEnd == null) {
-            rangeEnd = rangeStart.plusYears(1000);
-        }
 
         PageRequest page = PageRequest.of(from / size, size);
 
@@ -80,6 +78,19 @@ public class AdminEventServiceImpl implements AdminEventService {
         if (events.isEmpty()) {
             return List.of();
         }
+
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .toList();
+
+        List<ParticipationRequest> confirmedRequests =
+                requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+
+        Map<Long, Long> confirmedByEventId = confirmedRequests.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getEvent().getId(),
+                        Collectors.counting()
+                ));
 
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
@@ -101,8 +112,7 @@ public class AdminEventServiceImpl implements AdminEventService {
                 .map(event -> {
                     EventFullDto dto = eventMapper.toEventFullDto(event);
 
-                    long confirmed = requestRepository
-                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+                    long confirmed = confirmedByEventId.getOrDefault(event.getId(), 0L);
                     dto.setConfirmedRequests(confirmed);
 
                     String uri = "/events/" + event.getId();

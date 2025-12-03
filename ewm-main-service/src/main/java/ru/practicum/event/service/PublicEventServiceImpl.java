@@ -13,6 +13,7 @@ import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.enums.EventState;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.request.ParticipationRequest;
 import ru.practicum.request.ParticipationRequestRepository;
 import ru.practicum.request.enums.RequestStatus;
 import ru.practicum.stats.client.StatsClient;
@@ -53,9 +54,6 @@ public class PublicEventServiceImpl implements PublicEventService {
         if (rangeStart == null) {
             rangeStart = LocalDateTime.now();
         }
-        if (rangeEnd == null) {
-            rangeEnd = rangeStart.plusYears(1000);
-        }
 
         Sort springSort = Sort.by("eventDate").ascending();
         PageRequest page = PageRequest.of(from / size, size, springSort);
@@ -90,13 +88,26 @@ public class PublicEventServiceImpl implements PublicEventService {
             }
         }
 
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .toList();
+
+        List<ParticipationRequest> confirmedRequests =
+                requestRepository.findAllByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+
+        Map<Long, Long> confirmedByEventId = confirmedRequests.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getEvent().getId(),
+                        Collectors.counting()
+                ));
+
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
                 .toList();
 
         LocalDateTime statsEnd = LocalDateTime.now();
 
-        List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, uris, true);
+        List<ViewStatsDto> stats = statsClient.getStats(STATS_START, statsEnd, uris, false);
 
         Map<String, Long> viewsByUri = (stats == null)
                 ? Collections.emptyMap()
@@ -108,15 +119,14 @@ public class PublicEventServiceImpl implements PublicEventService {
 
         List<EventShortDto> result = events.stream()
                 .map(event -> {
-                    long confirmed = requestRepository
-                            .countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+                    long confirmed = confirmedByEventId.getOrDefault(event.getId(), 0L);
 
                     if (Boolean.TRUE.equals(onlyAvailable)) {
                         Integer limit = event.getParticipantLimit();
                         int limitValue = (limit == null ? 0 : limit);
 
                         if (limitValue > 0 && confirmed >= limitValue) {
-                            return null;
+                            return null; // выкидываем из результата
                         }
                     }
 
