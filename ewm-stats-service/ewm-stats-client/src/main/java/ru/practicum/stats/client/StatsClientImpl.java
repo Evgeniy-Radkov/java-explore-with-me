@@ -8,7 +8,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -53,10 +52,7 @@ public class StatsClientImpl implements StatsClient {
             }
         }
 
-        String url = builder
-                .encode(StandardCharsets.UTF_8)
-                .build(false)
-                .toUriString();
+        String url = builder.build().toUriString();
 
         ViewStatsDto[] body = restTemplate.getForObject(url, ViewStatsDto[].class);
 
