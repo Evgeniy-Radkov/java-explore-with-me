@@ -1,0 +1,229 @@
+{
+  "info": {
+    "name": "feature_comments",
+    "_postman_id": "11111111-2222-3333-4444-555555555555",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Create comment (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "// Save first comment id for user-related tests",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set(\"commentId1\", json.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"text\": \"Очень крутое событие!\" }"
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/1/events/2/comments",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["users", "1", "events", "2", "comments"]
+        }
+      }
+    },
+    {
+      "name": "1b. Create comment for admin delete (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "// Save second comment id for admin delete test",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set(\"commentId2\", json.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"text\": \"Комментарий для проверки удаления админом\" }"
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/1/events/2/comments",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["users", "1", "events", "2", "comments"]
+        }
+      }
+    },
+    {
+      "name": "2. Error: create comment for unpublished event (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 409\", function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"text\": \"Не должно работать\" }"
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/1/events/1/comments",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["users", "1", "events", "1", "comments"]
+        }
+      }
+    },
+    {
+      "name": "3. Get comments for event (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/events/2/comments",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["events", "2", "comments"]
+        }
+      }
+    },
+    {
+      "name": "4. Delete own comment (204)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:8080/users/1/comments/{{commentId1}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["users", "1", "comments", "{{commentId1}}"]
+        }
+      }
+    },
+    {
+      "name": "5. Delete foreign comment should fail (404 or 403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404 or 403\", function () {",
+              "    pm.expect([404, 403]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:8080/users/99/comments/{{commentId1}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["users", "99", "comments", "{{commentId1}}"]
+        }
+      }
+    },
+    {
+      "name": "6. Admin delete comment (204)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:8080/admin/comments/{{commentId2}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["admin", "comments", "{{commentId2}}"]
+        }
+      }
+    }
+  ]
+}
