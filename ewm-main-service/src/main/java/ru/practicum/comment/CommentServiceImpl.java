@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.NewCommentDto;
+import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventRepository;
 import ru.practicum.event.enums.EventState;
@@ -47,6 +48,20 @@ public class CommentServiceImpl implements CommentService {
         comment.setCreatedOn(LocalDateTime.now());
 
         commentRepository.save(comment);
+
+        return commentMapper.toDto(comment);
+    }
+
+    @Override
+    public CommentDto updateOwn(Long userId, Long commentId, UpdateCommentDto dto) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Комментарий не найден: " + commentId));
+
+        if (!comment.getAuthor().getId().equals(userId)) {
+            throw new NotFoundException("Комментарий не принадлежит пользователю");
+        }
+
+        comment.setText(dto.getText());
 
         return commentMapper.toDto(comment);
     }
